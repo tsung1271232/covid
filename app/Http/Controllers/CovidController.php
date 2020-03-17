@@ -93,61 +93,39 @@ class CovidController extends Controller
         $uuid = $request->input("uuid");
         $answer = $request->input("answer");
 
-        $nowQuesNum = Redis::get($uuid) ?? 'unknown';
-        Log::debug("nowQuestion ". $nowQuesNum);
+//        $nowQuesNum = Redis::get($uuid) ?? 'unknown';
+//        Log::debug("nowQuestion ". $nowQuesNum);
+//        $question = Question::where('question_number', $nowQuesNum)->first();
+        $nowUsageCount = Redis::get($uuid) ?? 'unknown';
+        $nowQuesNum = Redis::get($uuid."@".$nowUsageCount);
         $question = Question::where('question_number', $nowQuesNum)->first();
 
-        if($question->next_question != null){
-            $next_flow = $this->json2array($question->next_question);
+        $next_flow = $this->json2array($question->next_question);
 
-            if(count($next_flow) > 1)
-                $question_number = $next_flow[(int)$answer];
-            else
-                $question_number = $question->next_question;
+        $question_number = (count($next_flow) > 1)? $next_flow[(int)$answer] : $question->next_question;
+//            if(count($next_flow) > 1)
+//                $question_number = $next_flow[(int)$answer];
+//            else
+//                $question_number = $question->next_question;
 
-            if ($question_number != "3")
-                $end = "N";
-            else
-                $end = "Y";
+//            if ($question_number != "3")
+//                $end = "N";
+//            else
+//                $end = "Y";
+//
+//            Redis::set($uuid, $question_number);
 
-            Redis::set($uuid, $question_number);
+        $question = Question::where('question_number', $question_number)->first();
 
-            $question = Question::where('question_number', $question_number)->first();
-            Log::debug($question_number);
-            $re = [
-                "uuid" => $uuid,
-                "question_type" => $question->question_type,
-                "question" => $this->json2array($question->question),
-                "question_en" => $this->json2array($question->question_en),
-                "options" => $this->json2array($question->options),
-                "options_en" => $this->json2array($question->options_en),
-                "end" => $end
-            ];
-            return $re;
+        Redis::set($uuid, (string)((int)$nowUsageCount+1));
+        Redis::set($uuid."@".(string)((int)$nowUsageCount+1), $question_number);
 
-        }
-        else{
-            $question_number = (string)((int)$nowQuesNum + 1);
-            if($question_number != "3")
-                $end = "N";
-            else
-                $end = "Y";
+        $end = ($question->next_question === null)?"Y":"N";
 
-            Redis::set($uuid, $question_number);
+        Log::debug($question_number);
 
-            $question = Question::where('question_number', $question_number)->first();
-
-            $re = [
-                "uuid" => $uuid,
-                "question_type" => $question->question_type,
-                "question" => $this->json2array($question->question),
-                "question_en" => $this->json2array($question->question_en),
-                "options" => $this->json2array($question->options),
-                "options_en" => $this->json2array($question->options_en),
-                "end" => $end
-            ];
-            return $re;
-        }
+        $re = new QuestionResource($question, $uuid, $end, $question_number);
+        return $re;
     }
 
     public function preQuestion(Request $request){
@@ -211,21 +189,19 @@ class CovidController extends Controller
                 $client_user->tel_mobile = $tel_mobile;
                 $client_user->save();
             }
-            Redis::set($ID_number, "1");
+
+//            Redis::set($ID_number, "1");
+            /* $ID_number: $current usage counter*/
+            Redis::set($ID_number, "0");
+            /* $state == $ID_number-$usage_counter, ex: F111@15 */
+            $state = $ID_number . "@0";
+            /* F111@15: question_number*/
+            Redis::set($state, "1");
 
             $question = Question::where('question_number', "1")->first();
 
-            $re = [
-                "uuid" => $ID_number,
-                "question_type" => $question->question_type,
-                "question" => $this->json2array($question->question),
-                "question_en" => $this->json2array($question->question_en),
-                "options" => $this->json2array($question->options),
-                "options_en" => $this->json2array($question->options_en),
-                "end" => "N"
-            ];
+            $re = new QuestionResource($question, $ID_number, "N", "1");
             return $re;
-
         }
         else{
             $re = [

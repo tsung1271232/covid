@@ -26,6 +26,7 @@ Route::prefix('/covid')->group(function () {
     Route::Post('/nextQuestion', 'CovidController@nextQuestion')->name("nextQuestion");
 
     Route::Post('/new_startQuestion', 'CovidController@new_startQuestion')->name("new_startQuestion");
+
 });
 
 Auth::routes();
