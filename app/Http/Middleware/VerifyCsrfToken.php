@@ -15,7 +15,7 @@ class VerifyCsrfToken extends Middleware
         "/covid/signIn",
         "/covid/startQuestion",
         "/covid/nextQuestion",
-
+        "/covid/preQuestion",
         "/covid/new_startQuestion",
     ];
 }
