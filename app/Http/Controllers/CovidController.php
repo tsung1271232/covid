@@ -93,9 +93,6 @@ class CovidController extends Controller
         $uuid = $request->input("uuid");
         $answer = $request->input("answer");
 
-//        $nowQuesNum = Redis::get($uuid) ?? 'unknown';
-//        Log::debug("nowQuestion ". $nowQuesNum);
-//        $question = Question::where('question_number', $nowQuesNum)->first();
         $nowUsageCount = Redis::get($uuid) ?? 'unknown';
         $nowQuesNum = Redis::get($uuid."@".$nowUsageCount);
         $question = Question::where('question_number', $nowQuesNum)->first();
@@ -103,17 +100,6 @@ class CovidController extends Controller
         $next_flow = $this->json2array($question->next_question);
 
         $question_number = (count($next_flow) > 1)? $next_flow[(int)$answer] : $question->next_question;
-//            if(count($next_flow) > 1)
-//                $question_number = $next_flow[(int)$answer];
-//            else
-//                $question_number = $question->next_question;
-
-//            if ($question_number != "3")
-//                $end = "N";
-//            else
-//                $end = "Y";
-//
-//            Redis::set($uuid, $question_number);
 
         $question = Question::where('question_number', $question_number)->first();
 
