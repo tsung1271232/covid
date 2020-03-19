@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\ClientUser;
 use App\Question;
+use App\Topic;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Webpatser\Uuid\Uuid;
@@ -95,9 +96,21 @@ class CovidController extends Controller
 
         $nowUsageCount = Redis::get($uuid) ?? 'unknown';
         $nowQuesNum = Redis::get($uuid."@".$nowUsageCount);
+        Log::debug($nowUsageCount. " " . $nowQuesNum);
+        $maxQuesNum = Topic::find(Redis::get($uuid."_topic"))->max_number;
+
+        if($nowQuesNum >= $maxQuesNum){
+            Redis::set($uuid, (string)((int)$nowUsageCount+1));
+            Redis::set($uuid."@".(string)((int)$nowUsageCount+1), (string)((int)$maxQuesNum+1));
+
+            $re = new QuestionResource(new Question, $uuid, "Y", "None");
+            return $re;
+        }
+
         $question = Question::where('question_number', $nowQuesNum)->first();
 
         $next_flow = $this->json2array($question->next_question);
+        Log::debug($next_flow);
 
         $question_number = (count($next_flow) > 1)? $next_flow[(int)$answer] : $question->next_question;
 
@@ -107,8 +120,6 @@ class CovidController extends Controller
         Redis::set($uuid."@".(string)((int)$nowUsageCount+1), $question_number);
 
         $end = ($question->next_question === null)?"Y":"N";
-
-        Log::debug($question_number);
 
         $re = new QuestionResource($question, $uuid, $end, $question_number);
         return $re;
@@ -154,9 +165,11 @@ class CovidController extends Controller
                 $client_user->save();
             }
 
-//            Redis::set($ID_number, "1");
             /* $ID_number: $current usage counter*/
             Redis::set($ID_number, "0");
+            /* $ID_number_topic: topic_id*/
+            // TODO:
+            Redis::set($ID_number."_topic", "1");
             /* $state == $ID_number-$usage_counter, ex: F111@15 */
             $state = $ID_number . "@0";
             /* F111@15: question_number*/
@@ -176,11 +189,33 @@ class CovidController extends Controller
         }
     }
 
+    public function endQuestion(Request $request){
+        if ($request->hasFile('signature')) {
+
+            $uuid = $request->input("uuid");
+            $signature = $request->input("signature");
+            $file_name = $signature->getClientOriginalName();
+            //  $signature->move('uploads', $file_name);
+
+            $path = $request->signature->storeAs('uploads', $file_name);
+
+            $re = [
+                "state" => "ture",
+            ];
+            return $re;
+        }
+        else {
+            $re = [
+                "state" => "false",
+            ];
+            return $re;
+        }
+    }
+
     public function json2array($json){
-        Log::debug($json);
         $jsonArray = json_decode($json);
         $list = [];
-        if($jsonArray === null || gettype($jsonArray) == "integer") {
+        if($jsonArray === null || gettype($jsonArray) != "object") {
             array_push($list, $json);
         }
         else{

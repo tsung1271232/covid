@@ -37,6 +37,7 @@ class QuestionResource extends JsonResource
             "question_en" => $this->json2array($this->question_en),
             "options" => $this->json2array($this->options),
             "options_en" => $this->json2array($this->options_en),
+            // TODO: conditional
             "end" => $this->end,
             "question_number" => $this->question_number,
         ];

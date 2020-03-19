@@ -28,6 +28,10 @@ Route::prefix('/covid')->group(function () {
     Route::Post('/new_startQuestion', 'CovidController@new_startQuestion')->name("new_startQuestion");
 
     Route::Post('/preQuestion', 'CovidController@preQuestion')->name("preQuestion");
+
+    Route::Post('/endQuestion', 'CovidController@endQuestion')->name("endQuestion");
+
+    Route::get("/excel", "QuestionController@import");
 });
 
 Auth::routes();

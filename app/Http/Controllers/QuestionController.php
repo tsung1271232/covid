@@ -1,12 +1,33 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use App\Question;
 use Illuminate\Http\Request;
+use App\Imports\QuestionImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Log;
 
 class QuestionController extends Controller
 {
+    public function import(Request $request)
+    {
+        $collection = Excel::toCollection(new QuestionImport, $request->excel);
+
+        /*only deal with one sheet*/
+        $new_collection = collect();
+        foreach ($collection as $sheet) {
+            $title = $sheet->all()[0];
+            Log::debug($title);
+            $new_sheet = collect();
+            foreach ($sheet as $question) {
+                $new_question = $title->combine($question);
+                $new_sheet->push($new_question);
+            }
+            $new_collection->push($new_sheet);
+        }
+        return $new_collection;
+    }
+
     /**
      * Display a listing of the resource.
      *
