@@ -19,9 +19,6 @@ Route::get('/', function () {
 
 
 Route::prefix('/covid')->group(function () {
-//    Route::Post('/signIn', 'CovidController@signIn')->name("signIn");
-
-//    Route::Post('/startQuestion', 'CovidController@startQuestion')->name("startQuestion");
 
     Route::Post('/nextQuestion', 'CovidController@nextQuestion')->name("nextQuestion");
 
@@ -32,7 +29,16 @@ Route::prefix('/covid')->group(function () {
     Route::Post('/endQuestion', 'CovidController@endQuestion')->name("endQuestion");
 
     Route::get("/excel", "QuestionController@import");
+
+    Route::get('/topic', "TopicController@index")->name('topics.index');
+
+    Route::get('/questions/{topic}', 'QuestionController@index')->name('questions.index');
+
+    Route::get("/test", "TopicController@question");
+
+    Route::Post("insertQuestion", "QuestionController@store")->name('questions.insert');
 });
+
 
 Auth::routes();
 

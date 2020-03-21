@@ -6,8 +6,45 @@
 
 require('./bootstrap');
 
-window.Vue = require('vue');
+// var fa = require('fontawesome/index');
+// require('@coreui/coreui/dist/js/coreui.min');
+// require('@coreui/coreui/dist/js/coreui-utilities.min');
+// console.log(fa.fortAwesome + " Hello World!"); // Hello World!
 
+import PNotify from 'pnotify/dist/es/PNotify';
+import PNotifyButtons from 'pnotify/dist/es/PNotifyButtons';
+import PNotifyStyleMaterial from 'pnotify/dist/es/PNotifyStyleMaterial.js';
+
+window.PNotify = PNotify;
+// Set default styling.
+PNotify.defaults.styling = 'material';
+// This icon setting requires the Material Icons font. (See below.)
+PNotify.defaults.icons = 'material';
+
+$(function() {
+    if (window._SUCCESS && window._SUCCESS.length) {
+        for (let i in window._SUCCESS) {
+            PNotify.success({
+                title: "Success!",
+                text: window._SUCCESS[i],
+            });
+        }
+    }
+
+    if (window._WARNING && window._WARNING.length) {
+        for (let i in window._WARNING) {
+            PNotify.error({
+                title: "Error!",
+                text: window._WARNING[i],
+            });
+        }
+    }
+
+});
+
+// window.Vue = require('vue');
+
+// Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue
@@ -19,7 +56,6 @@ window.Vue = require('vue');
 // const files = require.context('./', true, /\.vue$/i)
 // files.keys().map(key => Vue.component(key.split('/').pop().split('.')[0], files(key).default))
 
-Vue.component('example-component', require('./components/ExampleComponent.vue').default);
 
 /**
  * Next, we will create a fresh Vue application instance and attach it to
@@ -27,6 +63,6 @@ Vue.component('example-component', require('./components/ExampleComponent.vue').
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-const app = new Vue({
-    el: '#app',
-});
+// const app = new Vue({
+//     el: '#app',
+// });

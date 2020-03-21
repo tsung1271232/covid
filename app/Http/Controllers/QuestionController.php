@@ -6,13 +6,15 @@ use Illuminate\Http\Request;
 use App\Imports\QuestionImport;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Log;
+use App\Topic;
 
 class QuestionController extends Controller
 {
-    public function import(Request $request)
+//    public function import(Request $request)
+    public function import(string $file_name)
     {
-        $collection = Excel::toCollection(new QuestionImport, $request->excel);
-
+//        $collection = Excel::toCollection(new QuestionImport, $request->excel);
+        $collection = Excel::toCollection(new QuestionImport, $file_name);
         /*only deal with one sheet*/
         $new_collection = collect();
         foreach ($collection as $sheet) {
@@ -25,7 +27,8 @@ class QuestionController extends Controller
             }
             $new_collection->push($new_sheet);
         }
-        return $new_collection;
+        $new_collection = $new_collection->collapse();
+        return $new_collection->toArray();
     }
 
     /**
@@ -33,9 +36,10 @@ class QuestionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Topic $topic)
     {
-        //
+        $contents = $topic->question;
+        return view('question.index', ['questions' => $contents, 'topic_id' => $topic->id]);
     }
 
     /**
@@ -45,7 +49,6 @@ class QuestionController extends Controller
      */
     public function create()
     {
-        //
     }
 
     /**
@@ -57,6 +60,19 @@ class QuestionController extends Controller
     public function store(Request $request)
     {
         //
+        $question = new Question;
+        $question->question_number = $request->question_number ?? '';
+        $question->question_type = $request->question_type ?? '';
+        $question->topic_id = $request->topic_id ?? '';
+        $question->question_id = $request->question_id ?? null;
+        $question->question = $request->question ?? '';
+        $question->question_en = $request->question_en ?? null;
+        $question->options_id = $request->options_id ?? null;
+        $question->options = $request->options ?? null;
+        $question->options_en = $request->options_en ?? null;
+        $question->required = $request->required ?? "Y";
+        $question->next_question = $request->next_question ?? null;
+        $question->save();
     }
 
     /**

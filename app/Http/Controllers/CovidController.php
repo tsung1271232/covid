@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Redis;
 use Webpatser\Uuid\Uuid;
 use App\Http\Resources\QuestionResource;
 use Illuminate\Support\Facades\Log;
+use Storage;
 
 class CovidController extends Controller
 {
@@ -190,26 +191,18 @@ class CovidController extends Controller
     }
 
     public function endQuestion(Request $request){
-        if ($request->hasFile('signature')) {
+        $uuid = $request->input("uuid");
+        $signature = $request->input("signature");
+//        $file_name = $signature->getClientOriginalName();
+        //  $signature->move('uploads', $file_name);
 
-            $uuid = $request->input("uuid");
-            $signature = $request->input("signature");
-            $file_name = $signature->getClientOriginalName();
-            //  $signature->move('uploads', $file_name);
+//            $path = $request->signature->storeAs('uploads', $file_name);
+        Storage::disk('local')->put($uuid.'.png', $signature);
 
-            $path = $request->signature->storeAs('uploads', $file_name);
-
-            $re = [
-                "state" => "ture",
-            ];
-            return $re;
-        }
-        else {
-            $re = [
-                "state" => "false",
-            ];
-            return $re;
-        }
+        $re = [
+            "state" => "ture",
+        ];
+        return $re;
     }
 
     public function json2array($json){

@@ -7,6 +7,11 @@ use Illuminate\Http\Request;
 
 class TopicController extends Controller
 {
+    public function question(Request $request)
+    {
+        $question = Topic::find(1)->question;
+        return $question;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -15,6 +20,8 @@ class TopicController extends Controller
     public function index()
     {
         //
+        $topics = Topic::all();
+        return view('topic.index')->with("topics", $topics);
     }
 
     /**
