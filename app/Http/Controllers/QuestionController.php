@@ -38,7 +38,10 @@ class QuestionController extends Controller
      */
     public function index(Topic $topic)
     {
-        $contents = $topic->question;
+        $contents = $topic->question->all();
+        usort($contents, function($a, $b) {
+            return (float)$a->question_number > (float)$b->question_number;
+        });
         return view('question.index', ['questions' => $contents, 'topic_id' => $topic->id]);
     }
 
@@ -59,20 +62,26 @@ class QuestionController extends Controller
      */
     public function store(Request $request)
     {
-        //
         $question = new Question;
         $question->question_number = $request->question_number ?? '';
         $question->question_type = $request->question_type ?? '';
         $question->topic_id = $request->topic_id ?? '';
-        $question->question_id = $request->question_id ?? null;
+        $question->question_code = $request->question_code ?? null;
         $question->question = $request->question ?? '';
         $question->question_en = $request->question_en ?? null;
-        $question->options_id = $request->options_id ?? null;
+        $question->options_code = $request->options_code ?? null;
         $question->options = $request->options ?? null;
         $question->options_en = $request->options_en ?? null;
         $question->required = $request->required ?? "Y";
         $question->next_question = $request->next_question ?? null;
-        $question->save();
+
+        try{
+            $question->save();
+            return response()->json(['status' => true], 200);
+        }
+        catch (\Exception $e){
+            return response()->json(['status' => false], 400);
+        }
     }
 
     /**
@@ -104,9 +113,31 @@ class QuestionController extends Controller
      * @param  \App\Question  $question
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Question $question)
+    public function update(Request $request)
     {
         //
+        $content = Question::where('topic_id', $request->topic_id)->where('question_number', $request->ori_question_number)->first();
+        $content->question_number = $request->question_number;
+        log::debug($request->question_number);
+        $content->next_question = $request->next_question;
+        $content->topic_id = $request->topic_id;
+        $content->options = $request->options;
+        $content->options_en = $request->options_en;
+        $content->options_code = $request->options_code;
+        $content->question = $request->question;
+        $content->question_en = $request->question_en;
+        $content->question_code = $request->question_code;
+        $content->question_type = $request->question_type;
+        $content->required = $request->required;
+
+        try{
+            $content->save();
+            return response()->json(['status' => true], 200);
+        }
+        catch (\Exception $e){
+            return response()->json(['status' => false], 400);
+        }
+
     }
 
     /**
@@ -118,5 +149,14 @@ class QuestionController extends Controller
     public function destroy(Question $question)
     {
         //
+    }
+
+    public function getContent(Request $request){
+        $topic_id = $request->topic_id;
+        $question_number = $request->question_number;
+
+        $content = Question::where('topic_id', $topic_id)->where('question_number', $question_number)->get();
+        log::debug($content);
+        return $content;
     }
 }

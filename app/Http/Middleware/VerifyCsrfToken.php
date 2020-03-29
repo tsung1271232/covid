@@ -12,13 +12,17 @@ class VerifyCsrfToken extends Middleware
      * @var array
      */
     protected $except = [
-        "/covid/signIn",
-        "/covid/startQuestion",
+        "/covid/patientProfile",
         "/covid/nextQuestion",
         "/covid/preQuestion",
         "/covid/new_startQuestion",
         "/covid/endQuestion",
-        "/covid/questions",
-        "/covid/insertQuestion",
+
+        "/covid/patientProfile",
+        "/covid/selfManage",
+
+        "/insertQuestion",
+        "/getQuestionContent",
+        "/updateQuestion",
     ];
 }

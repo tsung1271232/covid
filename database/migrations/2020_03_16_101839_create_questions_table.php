@@ -15,11 +15,20 @@ class CreateQuestionsTable extends Migration
     {
         Schema::create('questions', function (Blueprint $table) {
             $table->bigIncrements('id');
+            $table->string('topic_id');
             $table->string("question_number");
             $table->string('question_type');
-            $table->string('topic_id');
+
+            $table->string("question_code");
             $table->string('question');
-            $table->string('options');
+            $table->string("question_en")->nullable();
+
+            $table->string("options_code")->nullable();
+            $table->string('options')->nullable();
+            $table->string("options_en")->nullable();
+
+            $table->string("required");
+            $table->string("next_question")->nullable();
             $table->timestamps();
         });
     }

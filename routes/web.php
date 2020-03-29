@@ -28,15 +28,31 @@ Route::prefix('/covid')->group(function () {
 
     Route::Post('/endQuestion', 'CovidController@endQuestion')->name("endQuestion");
 
+    Route::Post('/patientProfile', 'CovidController@patientProfile');
+
     Route::get("/excel", "QuestionController@import");
+
+    Route::Post('/selfManage', 'CovidController@selfManage');
+
+    Route::Post('/patientProfile', 'CovidController@patientProfile');
+
+    /*for test*/
+    Route::get("/test/", "CovidController@test");
+    Route::get("/test/{topicRecord}/{topic}", "CovidController@forward2Hosp");
+});
+
+Route::group(['middleware' => ['auth:web']], function () {
 
     Route::get('/topic', "TopicController@index")->name('topics.index');
 
     Route::get('/questions/{topic}', 'QuestionController@index')->name('questions.index');
 
-    Route::get("/test", "TopicController@question");
+    Route::Post("/insertQuestion", "QuestionController@store")->name('questions.insert');
 
-    Route::Post("insertQuestion", "QuestionController@store")->name('questions.insert');
+    Route::Post("/updateQuestion", "QuestionController@update")->name('questions.update');
+
+    Route::Post('/getQuestionContent', "QuestionController@getContent")->name('questions.getContent');
+
 });
 
 

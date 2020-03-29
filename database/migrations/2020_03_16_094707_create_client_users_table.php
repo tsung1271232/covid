@@ -17,10 +17,12 @@ class CreateClientUsersTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('birth');
-            $table->string('address');
             $table->string('id_number');
-            $table->string('tel_home');
-            $table->string('tel_mobile');
+            $table->string("medical_number")->nullable();
+            $table->string("sex")->nullable();
+            $table->string("address")->nullable();
+            $table->string('tel_home')->nullable();
+            $table->string('tel_mobile')->nullable();
             $table->timestamps();
         });
     }

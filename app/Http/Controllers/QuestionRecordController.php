@@ -2,16 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Topic;
+use App\QuestionRecord;
 use Illuminate\Http\Request;
 
-class TopicController extends Controller
+class QuestionRecordController extends Controller
 {
-    public function question(Request $request)
-    {
-        $question = Topic::find($request->topicId)->question;
-        return $question;
-    }
     /**
      * Display a listing of the resource.
      *
@@ -20,8 +15,6 @@ class TopicController extends Controller
     public function index()
     {
         //
-        $topics = Topic::all();
-        return view('topic.index')->with("topics", $topics);
     }
 
     /**
@@ -48,10 +41,10 @@ class TopicController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Topic  $topic
+     * @param  \App\QuestionRecord  $questionRecord
      * @return \Illuminate\Http\Response
      */
-    public function show(Topic $topic)
+    public function show(QuestionRecord $questionRecord)
     {
         //
     }
@@ -59,10 +52,10 @@ class TopicController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Topic  $topic
+     * @param  \App\QuestionRecord  $questionRecord
      * @return \Illuminate\Http\Response
      */
-    public function edit(Topic $topic)
+    public function edit(QuestionRecord $questionRecord)
     {
         //
     }
@@ -71,10 +64,10 @@ class TopicController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Topic  $topic
+     * @param  \App\QuestionRecord  $questionRecord
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Topic $topic)
+    public function update(Request $request, QuestionRecord $questionRecord)
     {
         //
     }
@@ -82,10 +75,10 @@ class TopicController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Topic  $topic
+     * @param  \App\QuestionRecord  $questionRecord
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Topic $topic)
+    public function destroy(QuestionRecord $questionRecord)
     {
         //
     }

@@ -11,83 +11,29 @@ use Webpatser\Uuid\Uuid;
 use App\Http\Resources\QuestionResource;
 use Illuminate\Support\Facades\Log;
 use Storage;
+use App\TopicRecord;
+use App\CovidJson;
+use App\QuestionRecord;
+use GuzzleHttp\Client;
 
 class CovidController extends Controller
 {
-    public function signIn(Request $request)
+    public function patientProfile(Request $request)
     {
-        if($request->has("id_number")){
-            $name = $request->input('name') ?? '';
-            $birth = $request->input('birth') ?? '';
-            $ID_number = $request->input('id_number') ?? '';
-            $address = $request->input('address') ?? '';
-            $tel_home = $request->input('tel_home') ?? '';
-            $tel_mobile = $request->input('tel_mobile') ?? '';
-
-            $client_user = ClientUser::whereIdNumber($ID_number)->first();
-            if($client_user === null){
-                $client_user = new ClientUser;
-                $client_user->name = $name;
-                $client_user->ID_number = $ID_number;
-                $client_user->birth = $birth;
-                $client_user->address = $address;
-                $client_user->tel_home = $tel_home;
-                $client_user->tel_mobile = $tel_mobile;
-                $client_user->save();
-            }
-            $uuid = Uuid::generate()->string;
-
-            $re = [
-                "state" => "true",
-                "uuid" => $uuid
-            ];
-            return $re;
+        $id_number = $request->id_number ?? null;
+        if($id_number === null){
+            return response()->json(['status' => "id number not found"], 400);
         }
         else{
-            $re = [
-                "state" => "false",
-                "uuid" => ""
-            ];
-            return $re;
-        }
-    }
-
-    public function startQuestion(Request $request){
-        if($request->has("id_number")){
-            $name = $request->input('name') ?? '';
-            $birth = $request->input('birth') ?? '';
-            $ID_number = $request->input('id_number') ?? '';
-            $address = $request->input('address') ?? null;
-            $tel_home = $request->input('tel_home') ?? null;
-            $tel_mobile = $request->input('tel_mobile') ?? null;
-            $topic_id = $request->input('topic_id') ?? null;
-
-            $client_user = ClientUser::whereIdNumber($ID_number)->first();
-            if($client_user === null) {
-                $client_user = new ClientUser;
-                $client_user->name = $name;
-                $client_user->ID_number = $ID_number;
-                $client_user->birth = $birth;
-                $client_user->address = $address;
-                $client_user->tel_home = $tel_home;
-                $client_user->tel_mobile = $tel_mobile;
-                $client_user->save();
-            }
-            Redis::set($ID_number, "1");
-
-            $question = Question::where('question_number', "1")->first();
-            $re = new QuestionResource($question);
-            $re["uuid"] = $ID_number;
-            $re["end"] = "N";
-            return $re;
-
-        }
-        else{
-            $re = [
-                "state" => "false",
-                "uuid" => "",
-            ];
-            return $re;
+//            $client = new \GuzzleHttp\Client();
+//            $response = $client->post(env("Hosipital_Url")."/Set2019nCoVAneswerByJson", [
+//                'form_params' => [
+//                    'IDNo' => $id_number,
+//                ]
+//            ]);
+            return response()->json([["Chart_No" => "88888", 'Patient_Name' => "aaa", "Birth" => "1997-01-01", "Height" => "180",
+                "Weight" => "180", "Sex" => "男", "Age"=> "58", "BloodyType" => "o+", "id_number" => $id_number], ["Chart_No" => "7777", 'Patient_Name' => "bbb", "Birth" => "1997-01-01", "Height" => "180",
+                "Weight" => "180", "Sex" => "女", "Age"=> "58", "BloodyType" => "o+", "id_number" => $id_number] ], 200);
         }
     }
 
@@ -95,34 +41,49 @@ class CovidController extends Controller
         $uuid = $request->input("uuid");
         $answer = $request->input("answer");
 
+        /* get current user state*/
         $nowUsageCount = Redis::get($uuid) ?? 'unknown';
         $nowQuesNum = Redis::get($uuid."@".$nowUsageCount);
         Log::debug($nowUsageCount. " " . $nowQuesNum);
-        $maxQuesNum = Topic::find(Redis::get($uuid."_topic"))->max_number;
 
-        if($nowQuesNum >= $maxQuesNum){
-            Redis::set($uuid, (string)((int)$nowUsageCount+1));
-            Redis::set($uuid."@".(string)((int)$nowUsageCount+1), (string)((int)$maxQuesNum+1));
+        /* save answer record*/
+        $cur_question = Question::where('topic_id', Redis::get($uuid."@topic"))->where('question_number', $nowQuesNum)->first();
+        $userTopicRecordID = Redis::get($uuid."@topicRecord");
+        $record = QuestionRecord::where('topic_record_id', $userTopicRecordID)->where('question_number', $nowQuesNum)->first();
+        if($record === null) {
+            $record = new QuestionRecord;
+            $record->topic_record_id = $userTopicRecordID;
+            $record->question_number = $nowQuesNum;
+            $record->question_type = $cur_question->question_type;
+            $record->question_code = $cur_question->question_code;
+            $record->options_code = $cur_question->options_code ?? null;
+            $record->value = $request->answer;
+            $record->save();
+        } else {
+            $record->value = $request->answer;
+            $record->save();
+        }
 
+        if($cur_question->next_question === null){
+//            Redis::set($uuid, (string)((int)$nowUsageCount+1));
+//            Redis::set($uuid."@".(string)((int)$nowUsageCount+1), (string)((int)$nowQuesNum+1));
+            // return empty
             $re = new QuestionResource(new Question, $uuid, "Y", "None");
             return $re;
         }
 
-        $question = Question::where('question_number', $nowQuesNum)->first();
+        $next_flow = json2array($cur_question->next_question);
 
-        $next_flow = $this->json2array($question->next_question);
-        Log::debug($next_flow);
+        $next_question_number = (count($next_flow) > 1)? $next_flow[(int)$answer] : $cur_question->next_question;
+        Log::debug("next question " . $next_question_number);
 
-        $question_number = (count($next_flow) > 1)? $next_flow[(int)$answer] : $question->next_question;
-
-        $question = Question::where('question_number', $question_number)->first();
+        $next_question = Question::where('question_number', $next_question_number)->first();
 
         Redis::set($uuid, (string)((int)$nowUsageCount+1));
-        Redis::set($uuid."@".(string)((int)$nowUsageCount+1), $question_number);
+        Redis::set($uuid."@".(string)((int)$nowUsageCount+1), $next_question_number);
 
-        $end = ($question->next_question === null)?"Y":"N";
-
-        $re = new QuestionResource($question, $uuid, $end, $question_number);
+        $end = ($next_question->next_question === null)?"Y":"N";
+        $re = new QuestionResource($next_question, $uuid, $end, $next_question_number);
         return $re;
     }
 
@@ -148,11 +109,14 @@ class CovidController extends Controller
         if($request->has("id_number")){
             $name = $request->input('name') ?? '';
             $birth = $request->input('birth') ?? '';
+            $sex = $request->input('sex') ?? '';
             $ID_number = $request->input('id_number') ?? '';
+            $chart_no = $request->input('Chart_No') ?? '';
+            $topic_id = $request->input('topic_id') ?? '1';
+
             $address = $request->input('address') ?? null;
             $tel_home = $request->input('tel_home') ?? null;
             $tel_mobile = $request->input('tel_mobile') ?? null;
-            $topic_id = $request->input('topic_id') ?? null;
 
             $client_user = ClientUser::whereIdNumber($ID_number)->first();
             if($client_user === null) {
@@ -160,63 +124,131 @@ class CovidController extends Controller
                 $client_user->name = $name;
                 $client_user->ID_number = $ID_number;
                 $client_user->birth = $birth;
+                $client_user->sex = $sex;
+                $client_user->medical_number = $chart_no;
+
                 $client_user->address = $address;
                 $client_user->tel_home = $tel_home;
                 $client_user->tel_mobile = $tel_mobile;
                 $client_user->save();
             }
 
-            /* $ID_number: $current usage counter*/
-            Redis::set($ID_number, "0");
-            /* $ID_number_topic: topic_id*/
-            // TODO:
-            Redis::set($ID_number."_topic", "1");
-            /* $state == $ID_number-$usage_counter, ex: F111@15 */
-            $state = $ID_number . "@0";
-            /* F111@15: question_number*/
-            Redis::set($state, "1");
+            /*
+                $chart_no: $current usage counter
+                $chart_no_topic: topic_id
+                $state: $chart_no @ $usage_counter, ex: F111@15
+                F111@15: question_number
+            */
+            Redis::set($chart_no, "0");
+            Redis::set($chart_no."@topic", $topic_id);
+            Redis::set($chart_no."@0", "1");
 
-            $question = Question::where('question_number', "1")->first();
+            $question = Topic::find($topic_id)->question;
+            $question = $question->firstWhere("question_number", "1");
+            /* save record */
+            $topicRecord = new TopicRecord();
+            $topicRecord->client_user_id = $client_user->id;
+            $topicRecord->topic_id = $topic_id;
+            $topicRecord->finish = false;
+            $topicRecord->signature_path = null;
+            $topicRecord->save();
 
-            $re = new QuestionResource($question, $ID_number, "N", "1");
+            /* $chart_no @ topic_record id, for collect record and report*/
+            Redis::set($chart_no.'@topicRecord', $topicRecord->id);
+
+            $re = new QuestionResource($question, $chart_no, "N", "1");
             return $re;
         }
         else{
-            $re = [
-                "state" => "false",
-                "uuid" => "",
-            ];
-            return $re;
+            return response()->json(['status' => false, 'uuid' => ''], 400);
         }
     }
 
+    /* after finish questionnaire, we get the signature, and post data to hosipital*/
     public function endQuestion(Request $request){
-        $uuid = $request->input("uuid");
-        $signature = $request->input("signature");
-//        $file_name = $signature->getClientOriginalName();
-        //  $signature->move('uploads', $file_name);
+        $uuid = $request->input("uuid") ?? null;
+        $signature = $request->input("signature") ?? null;
 
-//            $path = $request->signature->storeAs('uploads', $file_name);
-        Storage::disk('local')->put($uuid.'.png', $signature);
-
-        $re = [
-            "state" => "ture",
-        ];
-        return $re;
-    }
-
-    public function json2array($json){
-        $jsonArray = json_decode($json);
-        $list = [];
-        if($jsonArray === null || gettype($jsonArray) != "object") {
-            array_push($list, $json);
+        if($uuid === null || $signature === null){
+            return response()->json(['status' => false], 400);
         }
         else{
-            foreach ($jsonArray as $key => $value){
-                array_push($list, $value);
+            /*save signature*/
+            Storage::disk('local')->put($uuid.'.png', $signature);
+            $topicRecordID = Redis::get($uuid.'@topicRecord');
+            $topicRecord = TopicRecord::find($topicRecordID);
+            $topicRecord->finish = true;
+            $topicRecord->signature_path = $uuid.'.png';
+            $topicRecord->save();
+            $this->forward2Hosp($topicRecord, Topic::find($topicRecord->topic_id), $uuid, $signature);
+        }
+
+
+
+        if($uuid === null || $signature === null){
+            return response()->json(['status' => false], 400);
+        }
+        else{
+            return response()->json(['status' => true], 200);
+        }
+    }
+
+    public function test(){
+    }
+
+    public function forward2Hosp(TopicRecord $topicRecord, Topic $topic, $uuid, $signature){
+        $typeMapping = [
+            "D" => "DT",
+            "R" => "R",
+            "RS" => "R",
+            "T" => "T"
+        ];
+        //TODO: data format
+
+        $rtnAnswer = new CovidJson();
+        $rtnAnswer = $rtnAnswer->create($topic);
+
+        $questionRecord = $topicRecord->questionRecord;
+
+        foreach($questionRecord as $oneRecord) {
+            $question_code = json2array($oneRecord->question_code);
+            $value = json2array($oneRecord->value);
+
+            $pair = array_combine($question_code, $value);
+
+            foreach ($pair as $Q => $A){
+                if($typeMapping[$oneRecord->question_type] == "R"){
+                    $idx = $rtnAnswer->search(function ($item, $key) use ($Q, $A, $oneRecord){
+                        if($item["QuestionID"] == $Q && $item["OptionID"] == json2array($oneRecord->options_code)[$A])
+                            return $item;
+                    });
+                    $rtnAnswer[$idx]["Checked"] = true;
+                }
+                else{
+                    $idx = $rtnAnswer->search(function ($item, $key) use ($Q, $A, $oneRecord){
+                        if($item["QuestionID"] == $Q && $item["OptionID"] == "")
+                            return $item;
+                    });
+                    $rtnAnswer[$idx]["value"] = $A;
+                }
             }
         }
-        return $list;
+
+//        $client = new \GuzzleHttp\Client();
+//        $response = $client->post(env("Hosipital_Url")."/Set2019nCoVAneswerByJson", [
+//            'form_params' => [
+//                'rtnAnswer' => $rtnAnswer,
+//                'TopicID' => $topic->description,
+//                "ChartNo" => $uuid,
+//                "Singbase64" => $signature,
+//            ]
+//        ]);
+        return $rtnAnswer;
+    }
+
+    public function selfManage(Request $request)
+    {
+        return response()->json(['status' => true], 200);
     }
 
 }
