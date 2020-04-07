@@ -139,9 +139,10 @@ class CovidController extends Controller
                 $state: $chart_no @ $usage_counter, ex: F111@15
                 F111@15: question_number
             */
-            Redis::set($chart_no, "0");
-            Redis::set($chart_no."@topic", $topic_id);
-            Redis::set($chart_no."@0", "1");
+            //TODO: $chart_no,
+            Redis::set($ID_number, "0");
+            Redis::set($ID_number."@topic", $topic_id);
+            Redis::set($ID_number."@0", "1");
 
             $question = Topic::find($topic_id)->question;
             $question = $question->firstWhere("question_number", "1");
@@ -154,9 +155,9 @@ class CovidController extends Controller
             $topicRecord->save();
 
             /* $chart_no @ topic_record id, for collect record and report*/
-            Redis::set($chart_no.'@topicRecord', $topicRecord->id);
+            Redis::set($ID_number.'@topicRecord', $topicRecord->id);
 
-            $re = new QuestionResource($question, $chart_no, "N", "1");
+            $re = new QuestionResource($question, $ID_number, "N", "1");
             return $re;
         }
         else{
@@ -245,7 +246,7 @@ class CovidController extends Controller
 //        ]);
         return $rtnAnswer;
     }
-
+    //TODO:
     public function selfManage(Request $request)
     {
         return response()->json(['status' => true], 200);

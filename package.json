@@ -24,10 +24,15 @@
         "vue-template-compiler": "^2.6.10"
     },
     "dependencies": {
-        "@coreui/coreui": "^2.1.0",
+        "@coreui/chartjs": "^2.0.0",
+        "@coreui/coreui": "^3.0.0",
+        "@coreui/icons": "^1.0.1",
+        "@coreui/utils": "^1.2.4",
         "@fortawesome/fontawesome-free": "^5.12.1",
         "@popperjs/core": "^2.1.1",
+        "cropper": "^4.1.0",
         "material-design-icons": "^3.0.1",
+        "pace-progress": "^1.0.2",
         "perfect-scrollbar": "^1.5.0",
         "pnotify": "^4.0.1",
         "simple-line-icons": "^2.4.1"

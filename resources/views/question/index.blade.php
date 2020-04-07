@@ -21,7 +21,8 @@
                             <th>question</th>
                             <th>options</th>
                             <th>next_question</th>
-                            <th>Edit</th>
+                            <th>View</th>
+
                         </tr>
                         </thead>
                         <tbody>
