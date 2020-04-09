@@ -76,7 +76,7 @@ class QuestionController extends Controller
         $question->next_question = $request->next_question ?? null;
 
         try{
-            $question->save();
+//            $question->save();
             return response()->json(['status' => true], 200);
         }
         catch (\Exception $e){
