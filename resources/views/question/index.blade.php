@@ -23,6 +23,7 @@
                             <th>next_question</th>
                             <th>View</th>
                             <th>Insert</th>
+                            <th>Delete</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -39,10 +40,13 @@
                                 <th scope="col" width="10%">{{$question->next_question}}</th>
 
                                 <td scope="col" width="5%">
-                                    <button type="button" class="btn btn-primary" onclick="clickViewButton({{$topic_id}}, {{$question->question_number}}, this)">View</button>
+                                    <button type="button" class="btn btn-success" onclick="clickViewButton({{$topic_id}}, {{$question->question_number}}, this)">View</button>
                                 </td>
                                 <td scope="col" width="5%">
                                     <button type="button" class="btn btn-primary" onclick="clickInsertButton(this)">Insert</button>
+                                </td>
+                                <td scope="col" width="5%">
+                                    <button type="button" class="btn btn-danger" onclick="clickDeleteButton({{$topic_id}}, {{$question->question_number}}, this)">Delete</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -267,6 +271,20 @@
             }
             return a
         };
+
+        function clickDeleteButton(topic_id, question_number, x){
+            axios.post( '{{route('questions.delete')}}', {
+                topic_id: topic_id,
+                question_number: question_number
+            })
+            .then(function(response) {
+                var curRow = document.getElementsByTagName("tr")[x.parentNode.parentNode.rowIndex];
+                curRow.remove();
+            })
+            .catch(function (error) {
+                console.log(error);
+            });
+        }
     </script>
 
 @endsection

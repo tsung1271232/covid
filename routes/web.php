@@ -53,6 +53,7 @@ Route::group(['middleware' => ['auth:web']], function () {
 
     Route::Post('/getQuestionContent', "QuestionController@getContent")->name('questions.getContent');
 
+    Route::Post('/deleteQuestion', "QuestionController@delete")->name('questions.delete');
 });
 
 

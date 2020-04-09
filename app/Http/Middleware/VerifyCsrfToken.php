@@ -24,5 +24,6 @@ class VerifyCsrfToken extends Middleware
         "/insertQuestion",
         "/getQuestionContent",
         "/updateQuestion",
+        "/deleteQuestion",
     ];
 }

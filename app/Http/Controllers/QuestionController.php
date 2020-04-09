@@ -149,6 +149,7 @@ class QuestionController extends Controller
     public function destroy(Question $question)
     {
         //
+
     }
 
     public function getContent(Request $request){
@@ -156,7 +157,21 @@ class QuestionController extends Controller
         $question_number = $request->question_number;
 
         $content = Question::where('topic_id', $topic_id)->where('question_number', $question_number)->get();
-        log::debug($content);
         return $content;
+    }
+
+    public function delete(Request $request){
+        try{
+            $topic_id = $request->topic_id;
+            $question_number = $request->question_number;
+
+            $content = Question::where('topic_id', $topic_id)->where('question_number', $question_number)->first();
+            log::debug($content->question);
+            $content->delete();
+            return response()->json(['status' => true], 200);
+        }
+        catch (\Exception $e){
+            return response()->json(['status' => false], 400);
+        }
     }
 }
