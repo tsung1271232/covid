@@ -13,7 +13,7 @@
             </div>
             <form>
                 <div class="container-fluid">
-                    <table class="table" id="Content">
+                    <table class="table" id="questionTable">
                         <thead>
                         <tr>
                             <th>question_number</th>
@@ -22,32 +22,31 @@
                             <th>options</th>
                             <th>next_question</th>
                             <th>View</th>
-
                         </tr>
                         </thead>
                         <tbody>
                         @foreach ($questions as $question)
-                            <tr id={{$loop->index}}>
+                            <tr id = "row{{$loop->index}}" >
                                 <th scope="col">{{$question->question_number}}</th>
 
                                 <th scope="col">{{$question->question_type}}</th>
 
-                                <th scope="col">{{$question->question}}</th>
+                                <th scope="col" width="30%">{{$question->question}}</th>
 
-                                <th scope="col">{{$question->options}}</th>
+                                <th scope="col" width="30%">{{$question->options}}</th>
 
                                 <th scope="col">{{$question->next_question}}</th>
 
-                                <th>
-                                    <button type="button" class="btn btn-primary" onclick="getQuestionContent({{$topic_id}}, {{$question->question_number}})">View</button>
-                                </th>
+                                <td>
+                                    <button type="button" class="btn btn-primary" onclick="getQuestionContent({{$topic_id}}, {{$question->question_number}}, this)">View</button>
+                                </td>
                             </tr>
                         @endforeach
                         </tbody>
 
                     </table>
 
-                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal">
+                    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="insertModal">
                         Insert new question
                     </button>
                 </div>
@@ -56,11 +55,11 @@
     </div>
 
     <!-- Modal -->
-    <div id="exampleModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div id="insertModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="insertModalLabel" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Insert new question</h5>
+                    <h5 class="modal-title" id="insertModalLabel">Insert new question</h5>
 
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -69,6 +68,9 @@
 
                 <div class="modal-body">
                     <div class='form-group'>
+                        <div class="form-group">
+                            <input type="hidden" id="insertCurRowId">
+                        </div>
                         <div class="form-group">
                             <label for="insert_question_number">question_number:</label>
                             <input type="text" class="form-control" name="question_number" value="" id="add_question_number">
@@ -133,7 +135,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Modify question</h5>
+                    <h5 class="modal-title" id="editModalLabel">Modify question</h5>
 
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -142,6 +144,9 @@
 
                 <div class="modal-body">
                     <div class='form-group'>
+                        <div class="form-group">
+                            <input type="hidden" class="form-control" value="" id="editRowIDX">
+                        </div>
                         <div class="form-group">
                             <label for="edit_question_number">question_number:</label>
                             <input type="hidden" class="form-control" name="question_number" value="" id="ori_question_number">
@@ -204,94 +209,97 @@
     </div>
 
     <script>
-        function getQuestionContent(topic_id, question_number){
-            $('#editModal').modal('show');
-            $.ajax({
-                type: "POST",
-                url: "/getQuestionContent",
-                dataType: "json",
-                data: {
+        function getQuestionContent(topic_id, question_number, x){
+            axios.post( "{{ route('questions.getContent') }}" , {
                     topic_id: topic_id,
                     question_number: question_number
-                },
-                success: function (data) {
-                    $('#ori_question_number').val(question_number);
-                    $('#edit_question_number').val(question_number);
-                    $('#edit_topic_number').val(topic_id);
-                    $('#edit_question_code').val(data[0]['question_code']);
-                    $('#edit_question').val(data[0]['question']);
-                    $('#edit_question_en').val(data[0]['question_en']);
-                    $('#edit_question_type').val(data[0]['question_type']);
-                    $('#edit_options_code').val(data[0]['options_code']);
-                    $('#edit_options').val(data[0]['options']);
-                    $('#edit_options_en').val(data[0]['options_en']);
-                    $('#edit_required').val(data[0]['required']);
-                    $('#edit_next_question').val(data[0]['next_question']);
-                },
-                error: function () {
-                    alert("not working");
-                }
+                })
+                .then(function (response) {
+                    console.log(response['data'][0], x.parentNode.parentNode.rowIndex);
+                    document.getElementById('editRowIDX').value = x.parentNode.parentNode.rowIndex;
+                    document.getElementById('ori_question_number').value = response['data'][0]['question_number'];
+                    document.getElementById('edit_question_number').value = response['data'][0]['question_number'];
+                    document.getElementById('edit_topic_id').value = response['data'][0]['topic_id'];
+                    document.getElementById('edit_question_code').value = response['data'][0]['question_code'];
+                    document.getElementById('edit_question').value = response['data'][0]['question'];
+                    document.getElementById('edit_question_en').value = response['data'][0]['question_en'];
+                    document.getElementById('edit_question_type').value = response['data'][0]['question_type'];
+                    document.getElementById('edit_options_code').value = (response['data'][0]['options_code'] == null)?"":response['data'][0]['options_code'];
+                    document.getElementById('edit_options').value = (response['data'][0]['options'] == null)?"":response['data'][0]['options'];
+                    document.getElementById('edit_options_en').value = (response['data'][0]['options_en'] == null)?"":response['data'][0]['options_en'];
+                    document.getElementById('edit_required').value = (response['data'][0]['required'] == null)?"":response['data'][0]['required'];
+                    document.getElementById('edit_next_question').value = (response['data'][0]['next_question'] == null)?"":response['data'][0]['next_question'];
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+            var myModal = new coreui.Modal(document.getElementById('editModal'), {
+            });
+            myModal.show();
+        }
+
+        function updateQuestion(element){
+            axios.post('{{route('questions.update')}}', {
+                ori_question_number : document.getElementById("ori_question_number").value,
+                question_number : document.getElementById("edit_question_number").value,
+                next_question : document.getElementById("edit_next_question").value,
+                topic_id: document.getElementById("edit_topic_id").value,
+                options : document.getElementById("edit_options").value,
+                options_en : document.getElementById("edit_options_en").value,
+                options_code : document.getElementById("edit_options_code").value,
+                question: document.getElementById("edit_question").value,
+                question_en : document.getElementById("edit_question_en").value,
+                question_code : document.getElementById("edit_question_code").value,
+                question_type : document.getElementById("edit_question_type").value,
+                required : document.getElementById("edit_required").value,
+            })
+            .then(function(response) {
+                var x = document.getElementsByTagName("tr")[document.getElementById('editRowIDX').value].id;
+                console.log(document.getElementById('editRowIDX').value, document.getElementsByTagName("tr")[document.getElementById('editRowIDX').value].id);
+                var row = document.getElementById(x);
+
+                var append_data =
+                    "<tr id={0}><th scope='col'>{1}</th><th scope='col'>{2}</th><th scope='col'>{3}</th><th scope='col'>{4}</th><th scope='col'>{5}</th><th><button type='button' class='btn btn-primary' onclick='getQuestionContent({6}, {7}, {8})'>View</button></th><tr>"
+                        .format(document.getElementById("editRowIDX").value, document.getElementById("edit_question_number").value,
+                            document.getElementById("edit_question_type").value, document.getElementById("edit_question").value,
+                            document.getElementById("edit_options").value, document.getElementById("edit_next_question").value,
+                            document.getElementById("edit_topic_id").value, document.getElementById("edit_question_number").value, "this");
+                row.innerHTML = append_data;
+            })
+            .catch(function (error) {
+                alert(error);
             });
         }
 
         function insertQuestion(element){
-            $.ajax({
-                type: "POST",
-                url: "/insertQuestion",
-                dataType: "json",
-                data: {
-                    question_number : $("#add_question_number").val(),
-                    next_question : $("#add_next_question").val(),
-                    topic_id: $("#add_topic_id").val(),
-                    options : $("#add_options").val(),
-                    options_en : $("#add_options_en").val(),
-                    options_code : $("#add_options_code").val(),
-                    question: $("#add_question").val(),
-                    question_en : $("#add_question_en").val(),
-                    question_code : $("#add_question_code").val(),
-                    question_type : $("#add_question_type").val(),
-                    required : $("#add_required").val(),
-                },
-                success: function () {
-                    var index = parseInt($('#Content tr').last().attr('id'));
-                    //TODO buttom
-                    var append_data =
-                        "<tr id={0}><th scope='col'>{1}</th><th scope='col'>{2}</th><th scope='col'>{3}</th><th scope='col'>{4}</th><th scope='col'>{5}</th><th><button type='button' class='btn btn-primary' onclick='getQuestionContent({6}, {7})'>View</button></th><tr>"
-                            .format(index+1, $("#add_question_number").val(), $("#add_question_type").val(), $("#add_question").val(), $("#add_options").val(), $("#add_next_question").val(), $("#add_topic_id").val(), $("#add_question_number").val());
-                    $("table tbody").append(append_data);
-                },
-                error: function () {
-                    alert("not working");
-                }
-            });
-        }
+            axios.post( '{{route('questions.insert')}}', {
+                question_number : document.getElementById("add_question_number").value,
+                next_question : document.getElementById("add_next_question").value,
+                topic_id: document.getElementById("add_topic_id").value,
+                options : document.getElementById("add_options").value,
+                options_en :document.getElementById("add_options_en").value,
+                options_code :document.getElementById("add_options_code").value,
+                question: document.getElementById("add_question").value,
+                question_en : document.getElementById("add_question_en").value,
+                question_code : document.getElementById("add_question_code").value,
+                question_type : document.getElementById("add_question_type").value,
+                required : document.getElementById("add_required").value,
+            })
+            .then(function(response) {
+                var table = document.getElementById("questionTable");
+                var lastRow = table.rows.length;
+                //TODO buttom
+                // var append_data =
+                //     "<tr id={0}><th scope='col'>{1}</th><th scope='col'>{2}</th><th scope='col'>{3}</th><th scope='col'>{4}</th><th scope='col'>{5}</th><th><button type='button' class='btn btn-primary' onclick='getQuestionContent({6}, {7})'>View</button></th><tr>"
+                //         .format(lastRow, document.getElementById("#add_question_number").value, document.getElementById("#add_question_type").value,
+                //         document.getElementById("#add_question").value, document.getElementById("#add_options").value, document.getElementById("#add_next_question").value,
+                //             document.getElementById("#add_topic_id").value, document.getElementById("#add_question_number").value);
+                // $("table tbody").append(append_data);
 
-        function updateQuestion(element){
-            $.ajax({
-                type: "POST",
-                url: "/updateQuestion",
-                dataType: "json",
-                data: {
-                    ori_question_number : $("#ori_question_number").val(),
-                    question_number : $("#edit_question_number").val(),
-                    next_question : $("#edit_next_question").val(),
-                    topic_id: $("#edit_topic_id").val(),
-                    options : $("#edit_options").val(),
-                    options_en : $("#edit_options_en").val(),
-                    options_code : $("#edit_options_code").val(),
-                    question: $("#edit_question").val(),
-                    question_en : $("#edit_question_en").val(),
-                    question_code : $("#edit_question_code").val(),
-                    question_type : $("#edit_question_type").val(),
-                    required : $("#edit_required").val(),
-                },
-                success: function () {
-                    //TODO:
-                    alert("success");
-                },
-                error: function () {
-                    alert("not working");
-                }
+
+            })
+            .catch(function (error) {
+                console.log(error);
             });
         }
 
