@@ -12,7 +12,7 @@ class QuestionResource extends JsonResource
      * @param  mixed  $resource
      * @return void
      */
-    public function __construct($resource, $uuid, $end, $question_number)
+    public function __construct($resource, $uuid, $end, $question_number, $flag = false, $max_number = null)
     {
         // Ensure you call the parent constructor
         parent::__construct($resource);
@@ -21,6 +21,8 @@ class QuestionResource extends JsonResource
         $this->uuid = $uuid;
         $this->end = $end;
         $this->question_number = $question_number;
+        $this->flag = $flag;
+        $this->max_nubmer = $max_number;
     }
     /**
      * Transform the resource into an array.
@@ -40,6 +42,7 @@ class QuestionResource extends JsonResource
             // TODO: conditional
             "end" => $this->end,
             "question_number" => $this->question_number,
+            "max_number" => $this->when($this->flag, $this->max_nubmer)
         ];
     }
 }
