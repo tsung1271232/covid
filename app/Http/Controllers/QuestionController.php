@@ -76,11 +76,23 @@ class QuestionController extends Controller
         $question->next_question = $request->next_question ?? null;
 
         try{
-//            $question->save();
-            return response()->json(['status' => true], 200);
+            $question->save();
+
+            $topic = Topic::find($request->topic_id);
+            $questions = $topic->question;
+            $sorted = $questions->sort(function ($a, $b){
+                return (float)$a->question_number > (float)$b->question_number;
+            });
+
+            $contents = $topic->question->all();
+            usort($contents, function($a, $b) {
+                return (float)$a->question_number > (float)$b->question_number;
+            });
+
+            return response()->json(['status' => true, 'id' => $question->id], 200);
         }
         catch (\Exception $e){
-            return response()->json(['status' => false], 400);
+            return response()->json(['status' => false, 'message' => $e], 400);
         }
     }
 
@@ -116,7 +128,7 @@ class QuestionController extends Controller
     public function update(Request $request)
     {
         //
-        $content = Question::where('topic_id', $request->topic_id)->where('question_number', $request->ori_question_number)->first();
+        $content = Question::find($request->id);
         $content->question_number = $request->question_number;
         log::debug($request->question_number);
         $content->next_question = $request->next_question;
@@ -132,10 +144,21 @@ class QuestionController extends Controller
 
         try{
             $content->save();
-            return response()->json(['status' => true], 200);
+
+            $topic = Topic::find($request->topic_id);
+            $questions = $topic->question;
+            $sorted = $questions->sort(function ($a, $b){
+                return (float)$a->question_number > (float)$b->question_number;
+            });
+
+            log::debug($sorted->last());
+            $topic->max_number = $sorted->last()->question_number;
+            $topic->save();
+
+            return response()->json(['status' => true, 'id' => $content->id], 200);
         }
         catch (\Exception $e){
-            return response()->json(['status' => false], 400);
+            return response()->json(['status' => false, 'message' => $e], 400);
         }
 
     }
@@ -153,25 +176,31 @@ class QuestionController extends Controller
     }
 
     public function getContent(Request $request){
-        $topic_id = $request->topic_id;
-        $question_number = $request->question_number;
+        $id = $request->id;
 
-        $content = Question::where('topic_id', $topic_id)->where('question_number', $question_number)->get();
+        $content = Question::find($id);
         return $content;
     }
 
     public function delete(Request $request){
         try{
-            $topic_id = $request->topic_id;
-            $question_number = $request->question_number;
+            $id = $request->id;
 
-            $content = Question::where('topic_id', $topic_id)->where('question_number', $question_number)->first();
-            log::debug($content->question);
+            $content = Question::find($id);
+            Log::debug($content);
+            $topic = $content->topic;
+            Log::debug($topic);
+            if((float)$content->question_number == (float)$topic->max_number){
+                $topic->max_number = (float)$topic->max_number - 1;
+                $topic->save();
+            }
+
             $content->delete();
+
             return response()->json(['status' => true], 200);
         }
         catch (\Exception $e){
-            return response()->json(['status' => false], 400);
+            return response()->json(['status' => false, 'message' => $e], 400);
         }
     }
 }

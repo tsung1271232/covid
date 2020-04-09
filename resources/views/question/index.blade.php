@@ -16,11 +16,11 @@
                     <table class="table" id="questionTable">
                         <thead>
                         <tr>
-                            <th>question_number</th>
-                            <th>question_type</th>
+                            <th>question number</th>
+                            <th>question type</th>
                             <th>question</th>
                             <th>options</th>
-                            <th>next_question</th>
+                            <th>next id</th>
                             <th>View</th>
                             <th>Insert</th>
                             <th>Delete</th>
@@ -40,13 +40,13 @@
                                 <th scope="col" width="10%">{{$question->next_question}}</th>
 
                                 <td scope="col" width="5%">
-                                    <button type="button" class="btn btn-success" onclick="clickViewButton({{$topic_id}}, {{$question->question_number}}, this)">View</button>
+                                    <button type="button" class="btn btn-success" onclick="clickViewButton({{$question->id}}, this)">View</button>
                                 </td>
                                 <td scope="col" width="5%">
                                     <button type="button" class="btn btn-primary" onclick="clickInsertButton(this)">Insert</button>
                                 </td>
                                 <td scope="col" width="5%">
-                                    <button type="button" class="btn btn-danger" onclick="clickDeleteButton({{$topic_id}}, {{$question->question_number}}, this)">Delete</button>
+                                    <button type="button" class="btn btn-danger" onclick="clickDeleteButton({{$question->id}}, this)">Delete</button>
                                 </td>
                             </tr>
                         @endforeach
@@ -77,6 +77,9 @@
                             <input type="hidden" class="form-control" value="" id="curRowIDX">
                         </div>
                         <div class="form-group">
+                            <input type="hidden" class="form-control" value="" id="modal_question_id">
+                        </div>
+                        <div class="form-group">
                             <label for="modal_question_number">question_number:</label>
                             <input type="hidden" class="form-control" value="" id="ori_question_number">
                             <input type="text" class="form-control" value="" id="modal_question_number">
@@ -95,7 +98,7 @@
                             <input type="text" class="form-control" value={{$topic_id}} disabled id="modal_topic_id">
                         </div>
                         <div class="form-group">
-                            <label for="modal_question_id">question_id:</label>
+                            <label for="modal_question_code">question_id:</label>
                             <input type="text" class="form-control" value="" id="modal_question_code">
                         </div>
                         <div class="form-group">
@@ -138,25 +141,28 @@
     </div>
 
     <script>
-        function clickViewButton(topic_id, question_number, x){
+        function clickViewButton(id, x){
+            console.log(id);
             axios.post( "{{ route('questions.getContent') }}" , {
-                    topic_id: topic_id,
-                    question_number: question_number
+                    id: id,
                 })
                 .then(function (response) {
+                    console.log(response);
+
                     document.getElementById('curRowIDX').value = x.parentNode.parentNode.rowIndex;
-                    document.getElementById('ori_question_number').value = response['data'][0]['question_number'];
-                    document.getElementById('modal_question_number').value = response['data'][0]['question_number'];
-                    document.getElementById('modal_topic_id').value = response['data'][0]['topic_id'];
-                    document.getElementById('modal_question_code').value = response['data'][0]['question_code'];
-                    document.getElementById('modal_question').value = response['data'][0]['question'];
-                    document.getElementById('modal_question_en').value = response['data'][0]['question_en'];
-                    document.getElementById('modal_question_type').value = response['data'][0]['question_type'];
-                    document.getElementById('modal_options_code').value = (response['data'][0]['options_code'] == null)?"":response['data'][0]['options_code'];
-                    document.getElementById('modal_options').value = (response['data'][0]['options'] == null)?"":response['data'][0]['options'];
-                    document.getElementById('modal_options_en').value = (response['data'][0]['options_en'] == null)?"":response['data'][0]['options_en'];
-                    document.getElementById('modal_required').value = (response['data'][0]['required'] == null)?"":response['data'][0]['required'];
-                    document.getElementById('modal_next_question').value = (response['data'][0]['next_question'] == null)?"":response['data'][0]['next_question'];
+                    document.getElementById('modal_question_id').value = response['data']['id'];
+                    document.getElementById('ori_question_number').value = response['data']['question_number'];
+                    document.getElementById('modal_question_number').value = response['data']['question_number'];
+                    document.getElementById('modal_topic_id').value = response['data']['topic_id'];
+                    document.getElementById('modal_question_code').value = response['data']['question_code'];
+                    document.getElementById('modal_question').value = response['data']['question'];
+                    document.getElementById('modal_question_en').value = response['data']['question_en'];
+                    document.getElementById('modal_question_type').value = response['data']['question_type'];
+                    document.getElementById('modal_options_code').value = (response['data']['options_code'] == null)?"":response['data']['options_code'];
+                    document.getElementById('modal_options').value = (response['data']['options'] == null)?"":response['data']['options'];
+                    document.getElementById('modal_options_en').value = (response['data']['options_en'] == null)?"":response['data']['options_en'];
+                    document.getElementById('modal_required').value = (response['data']['required'] == null)?"":response['data']['required'];
+                    document.getElementById('modal_next_question').value = (response['data']['next_question'] == null)?"":response['data']['next_question'];
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -175,6 +181,7 @@
 
         function updateQuestion(element){
             axios.post('{{route('questions.update')}}', {
+                id: document.getElementById('modal_question_id').value = document.getElementById("modal_question_id").value,
                 ori_question_number : document.getElementById("ori_question_number").value,
                 question_number : document.getElementById("modal_question_number").value,
                 next_question : document.getElementById("modal_next_question").value,
@@ -197,8 +204,9 @@
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_options").value) +
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_next_question").value) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickViewButton({0}, {1}, this)'>View</button></th>".format(document.getElementById("modal_topic_id").value, document.getElementById("modal_question_number").value) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>";
+                    "<th><button type='button' class='btn btn-success' onclick='clickViewButton({0}, this)'>View</button></th>".format(response['data']['id']) +
+                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>" +
+                    "<th><button type='button' class='btn btn-danger' onclick='clickDeleteButton({0}, this)'>Delete</button></th>".format(response['data']['id']);
                 row.innerHTML = append_data;
             })
             .catch(function (error) {
@@ -211,6 +219,7 @@
             console.log("cur index ", x.parentNode.parentNode.rowIndex);
 
             document.getElementById('curRowIDX').value = x.parentNode.parentNode.rowIndex;
+            document.getElementById("modal_question_id").value = "";
             document.getElementById("modal_question_number").value = "";
             document.getElementById("modal_next_question").value = "";
             document.getElementById("modal_options").value = "{\"0\":\"否\", \"1\":\"是\"}";
@@ -255,8 +264,9 @@
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_options").value) +
                     "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_next_question").value) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickViewButton({0}, {1}, this)'>View</button></th>".format(document.getElementById("modal_topic_id").value, document.getElementById("modal_question_number").value) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>";
+                    "<th><button type='button' class='btn btn-success' onclick='clickViewButton({0}, this)'>View</button></th>".format(response['data']['id']) +
+                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>" +
+                    "<th><button type='button' class='btn btn-danger' onclick='clickDeleteButton({0}, this)'>Delete</button></th>".format(response['data']['id']);
                 curRow.insertAdjacentHTML("afterend", append_data);
             })
             .catch(function (error) {
@@ -272,10 +282,9 @@
             return a
         };
 
-        function clickDeleteButton(topic_id, question_number, x){
+        function clickDeleteButton(id, x){
             axios.post( '{{route('questions.delete')}}', {
-                topic_id: topic_id,
-                question_number: question_number
+                id:id
             })
             .then(function(response) {
                 var curRow = document.getElementsByTagName("tr")[x.parentNode.parentNode.rowIndex];
@@ -288,5 +297,4 @@
     </script>
 
 @endsection
-
 
