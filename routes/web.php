@@ -28,7 +28,7 @@ Route::prefix('/covid')->group(function () {
 
     Route::Post('/endQuestion', 'CovidController@endQuestion')->name("endQuestion");
 
-    Route::Post('/patientProfile', 'CovidController@patientProfile');
+    Route::Post('/patientProfile', 'CovidController@patientProfile')->name("getPatientBySSN");
 
     Route::get("/excel", "QuestionController@import");
 
@@ -37,8 +37,7 @@ Route::prefix('/covid')->group(function () {
     Route::Post('/patientProfile', 'CovidController@patientProfile');
 
     /*for test*/
-    Route::get("/test/", "CovidController@test");
-    Route::get("/test/{topicRecord}/{topic}", "CovidController@forward2Hosp");
+    Route::get("/test/{topicRecord}/{topic}", "CovidController@test");
 });
 
 Route::group(['middleware' => ['auth:web']], function () {
@@ -46,6 +45,12 @@ Route::group(['middleware' => ['auth:web']], function () {
     Route::get('/topic', "TopicController@index")->name('topics.index');
 
     Route::get('/questions/{topic}', 'QuestionController@index')->name('questions.index');
+
+    Route::get('/clientUsers', "ClientUserController@index")->name('clientUsers.index');
+
+    Route::get('/topicRecords/{user}', "TopicRecordController@index")->name('topicRecords.index');
+
+    Route::get('/questionRecords/{topic_record_id}', "QuestionRecordController@index")->name('questionRecords.index');
 
     Route::Post("/insertQuestion", "QuestionController@store")->name('questions.insert');
 

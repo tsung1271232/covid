@@ -14,7 +14,8 @@ class ClientUserController extends Controller
      */
     public function index()
     {
-        //
+        $clientUsers = ClientUser::all();
+        return view('clientUser.index')->with("clientUsers", $clientUsers);
     }
 
     /**

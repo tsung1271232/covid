@@ -22,15 +22,27 @@ class CovidController extends Controller
     {
         $id_number = $request->id_number ?? null;
         if($id_number === null){
-            return response()->json(['status' => "id number not found"], 400);
+            return response()->json(['message' => "id number not found"], 400);
         }
         else{
+            //TODO
 //            $client = new \GuzzleHttp\Client();
 //            $response = $client->post(env("Hosipital_Url")."/Set2019nCoVAneswerByJson", [
 //                'form_params' => [
 //                    'IDNo' => $id_number,
 //                ]
 //            ]);
+//            if($response->getStatusCode() != "200"){
+//                return response()->json(['message' => "Set2019nCoVAneswerByJson API error: " . $response->getReasonPhrase()], 400);
+//            }
+//            else{
+//                $data = json_decode($response->getBody(), true);
+    //            for($i = 0; $i < count($data); $i++){
+    //                $data[$i]["id_number"] = $id_number;
+    //            }
+//                return response()->json($data,200);
+//            }
+
             return response()->json([["Chart_No" => "88888", 'Patient_Name' => "aaa", "Birth" => "1997-01-01", "Height" => "180",
                 "Weight" => "180", "Sex" => "男", "Age"=> "58", "BloodyType" => "o+", "id_number" => $id_number], ["Chart_No" => "7777", 'Patient_Name' => "bbb", "Birth" => "1997-01-01", "Height" => "180",
                 "Weight" => "180", "Sex" => "女", "Age"=> "58", "BloodyType" => "o+", "id_number" => $id_number] ], 200);
@@ -38,13 +50,17 @@ class CovidController extends Controller
     }
 
     public function nextQuestion(Request $request){
-        $uuid = $request->input("uuid");
-        $answer = $request->input("answer");
+        $uuid = $request->input("uuid") ?? null;
+        $answer = $request->input("Answer") ?? $request->input("answer");
+
+        log::debug($answer);
+        if($uuid == null || $answer == null){
+            return response()->json(['status' => false, 'message' => 'uuid or answer not found'], 400);
+        }
 
         /* get current user state*/
-        $nowUsageCount = Redis::get($uuid) ?? 'unknown';
+        $nowUsageCount = Redis::get($uuid);
         $nowQuesNum = Redis::get($uuid."@".$nowUsageCount);
-        Log::debug($nowUsageCount. " " . $nowQuesNum);
 
         /* save answer record*/
         $cur_question = Question::where('topic_id', Redis::get($uuid."@topic"))->where('question_number', $nowQuesNum)->first();
@@ -57,17 +73,14 @@ class CovidController extends Controller
             $record->question_type = $cur_question->question_type;
             $record->question_code = $cur_question->question_code;
             $record->options_code = $cur_question->options_code ?? null;
-            $record->value = $request->answer;
+            $record->value = $answer;
             $record->save();
         } else {
-            $record->value = $request->answer;
+            $record->value = $answer;
             $record->save();
         }
 
         if($cur_question->next_question === null){
-//            Redis::set($uuid, (string)((int)$nowUsageCount+1));
-//            Redis::set($uuid."@".(string)((int)$nowUsageCount+1), (string)((int)$nowQuesNum+1));
-            // return empty
             $re = new QuestionResource(new Question, $uuid, "Y", "None");
             return $re;
         }
@@ -118,7 +131,7 @@ class CovidController extends Controller
             $tel_home = $request->input('tel_home') ?? null;
             $tel_mobile = $request->input('tel_mobile') ?? null;
 
-            $client_user = ClientUser::whereIdNumber($ID_number)->first();
+            $client_user = ClientUser::whereIdNumber($ID_number)->whereMedicalNumber($chart_no)->first();
             if($client_user === null) {
                 $client_user = new ClientUser;
                 $client_user->name = $name;
@@ -132,37 +145,47 @@ class CovidController extends Controller
                 $client_user->tel_mobile = $tel_mobile;
                 $client_user->save();
             }
+            else{
+                $client_user->name = $name;
+                $client_user->ID_number = $ID_number;
+                $client_user->birth = $birth;
+                $client_user->sex = $sex;
+                $client_user->medical_number = $chart_no;
 
+                $client_user->address = $address;
+                $client_user->tel_home = $tel_home;
+                $client_user->tel_mobile = $tel_mobile;
+                $client_user->save();
+            }
             /*
                 $chart_no: $current usage counter
                 $chart_no_topic: topic_id
                 $state: $chart_no @ $usage_counter, ex: F111@15
                 F111@15: question_number
             */
-            //TODO: $ID_number -> $chart_no,
-            Redis::set($ID_number, "0");
-            Redis::set($ID_number."@topic", $topic_id);
-            Redis::set($ID_number."@0", "1");
+            Redis::set($client_user->medical_number, "0");
+            Redis::set($client_user->medical_number."@topic", $topic_id);
+            Redis::set($client_user->medical_number."@0", "1");
 
             $topic = Topic::find($topic_id);
             $question = $topic->question;
             $question = $question->firstWhere("question_number", "1");
-            /* save record */
+            /* save new topic record */
             $topicRecord = new TopicRecord();
             $topicRecord->client_user_id = $client_user->id;
             $topicRecord->topic_id = $topic_id;
             $topicRecord->finish = false;
             $topicRecord->signature_path = null;
             $topicRecord->save();
-
+            log::debug("topic record: " . $topicRecord->id);
             /* $chart_no @ topic_record id, for collect record and report*/
-            Redis::set($ID_number.'@topicRecord', $topicRecord->id);
+            Redis::set($client_user->medical_number.'@topicRecord', $topicRecord->id);
 
-            $re = new QuestionResource($question, $ID_number, "N", "1", true, $topic->max_number);
+            $re = new QuestionResource($question, $client_user->medical_number, "N", "1", true, $topic->max_number);
             return $re;
         }
         else{
-            return response()->json(['status' => false, 'uuid' => ''], 400);
+            return response()->json(['status' => false, 'message' => 'id number not found'], 400);
         }
     }
 
@@ -182,10 +205,8 @@ class CovidController extends Controller
             $topicRecord->finish = true;
             $topicRecord->signature_path = $uuid.'.png';
             $topicRecord->save();
-            $this->forward2Hosp($topicRecord, Topic::find($topicRecord->topic_id), $uuid, $signature);
+            $rtnAnswer = $this->forward2Hosp($topicRecord, Topic::find($topicRecord->topic_id), $uuid, $signature);
         }
-
-
 
         if($uuid === null || $signature === null){
             return response()->json(['status' => false], 400);
@@ -195,7 +216,10 @@ class CovidController extends Controller
         }
     }
 
-    public function test(){
+    public function test($topicRecord, $topic){
+        $rtnAnswer = $this->forward2Hosp(TopicRecord::find($topicRecord), Topic::find($topic), 7777, "none");
+
+        return response()->json([$rtnAnswer], 200);
     }
 
     public function forward2Hosp(TopicRecord $topicRecord, Topic $topic, $uuid, $signature){

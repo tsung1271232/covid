@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\ClientUser;
 use App\TopicRecord;
 use Illuminate\Http\Request;
 
@@ -12,9 +13,11 @@ class TopicRecordController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(ClientUser $user)
     {
         //
+        $contents = $user->topicRecord;
+        return view('topicRecord.index', ['records' => $contents]);
     }
 
     /**

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\QuestionRecord;
+use App\TopicRecord;
 use Illuminate\Http\Request;
 
 class QuestionRecordController extends Controller
@@ -12,9 +13,16 @@ class QuestionRecordController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(TopicRecord $topic_record_id)
     {
         //
+
+        $contents = $topic_record_id->questionRecord;
+        $sorted = $contents->sort(function ($a, $b){
+            return (float)$a->question_number > (float)$b->question_number;
+        });
+
+        return view('questionRecord.index', ['records' => $sorted]);
     }
 
     /**

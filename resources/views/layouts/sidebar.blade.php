@@ -76,7 +76,11 @@
                 Topic List
             </a>
         </li>
-
+        <li class="c-sidebar-nav-item">
+            <a class="c-sidebar-nav-link" href="{{ route('clientUsers.index') }}">
+                Client User List
+            </a>
+        </li>
     </ul>
     <button class="c-sidebar-minimizer c-brand-minimizer" type="button"></button>
 </div>

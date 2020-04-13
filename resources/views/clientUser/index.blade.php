@@ -15,19 +15,23 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Description</th>
-                        <th>Max_Number</th>
-                        <th>Question</th>
+                        <th>Name</th>
+                        <th>SSN</th>
+                        <th>Medical NO</th>
+                        <th>Sex</th>
+                        <th>Topic Records</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach($topics as $topic)
+                    @foreach($clientUsers as $user)
                         <tr>
-                            <td>{{ $topic->id }}</td>
-                            <td>{{ $topic->description }}</td>
-                            <td>{{ $topic->max_number }}</td>
-                            <td><a href="{{ route('questions.index', $topic->id) }}" class="btn btn-sm btn-primary">Questions</a> </td>
-                        </tr>
+                            <td>{{ $user->id }}</td>
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->id_number }}</td>
+                            <td>{{ $user->medical_number }}</td>
+                            <td>{{ $user->sex }}</td>
+                            <td><a href="{{ route('topicRecords.index', $user->id) }}" class="btn btn-sm btn-primary">Records</a> </td>
+                         </tr>
                     @endforeach
                     </tbody>
                 </table>

@@ -15,18 +15,24 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Description</th>
-                        <th>Max_Number</th>
-                        <th>Question</th>
+                        <th>Topic ID</th>
+                        <th>Is Finish</th>
+                        <th>Signature</th>
+                        <th>QuestionRecord</th>
                     </tr>
                     </thead>
                     <tbody>
-                    @foreach($topics as $topic)
+                    @foreach($records as $record)
                         <tr>
-                            <td>{{ $topic->id }}</td>
-                            <td>{{ $topic->description }}</td>
-                            <td>{{ $topic->max_number }}</td>
-                            <td><a href="{{ route('questions.index', $topic->id) }}" class="btn btn-sm btn-primary">Questions</a> </td>
+                            <td>{{ $record->id }}</td>
+                            <td>{{ $record->topic_id }}</td>
+                            <td>{{ $record->finish }}</td>
+                            @if ($record->signature_path === null)
+                                <td>No Found</td>
+                            @else
+                                <td>{{$record->signature_path}}</td>
+                            @endif
+                            <td><a href="{{ route('questionRecords.index', $record->id) }}" class="btn btn-sm btn-primary">Questions</a> </td>
                         </tr>
                     @endforeach
                     </tbody>

@@ -16,20 +16,23 @@
                     <table class="table" id="questionTable">
                         <thead>
                         <tr>
+                            <th>id</th>
                             <th>question number</th>
                             <th>question type</th>
                             <th>question</th>
                             <th>options</th>
                             <th>next id</th>
-                            <th>View</th>
-                            <th>Insert</th>
-                            <th>Delete</th>
+                            <th>Operation</th>
+                            <th></th>
+                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach ($questions as $question)
                             <tr id = "row{{$loop->index}}" >
-                                <th scope="col" width="10%">{{$question->question_number}}</th>
+                                <th scope="col" width="5%">{{$question->id}}</th>
+
+                                <th scope="col" width="5%">{{$question->question_number}}</th>
 
                                 <th scope="col" width="10%">{{$question->question_type}}</th>
 
@@ -86,7 +89,7 @@
                         </div>
                         <div class="form-group">
                             <label for="modal_question_type">question_type:</label>
-                            <select id="modal_question_type">
+                            <select id="modal_question_type" onclick="setInputByQuestionType(this)">
                                 <option value="R">Yes/No</option>
                                 <option value="RS">Multi</option>
                                 <option value="D">Date</option>
@@ -123,8 +126,12 @@
                         </div>
                         <div class="form-group">
                             <label for="modal_required">required:</label>
-                            <input type="text" class="form-control" value="" id="modal_required">
+                            <select id="modal_required">
+                                <option value="Y">Yes</option>
+                                <option value="N">No</option>
+                            </select>
                         </div>
+
                         <div class="form-group">
                             <label for="modal_next_question">next_question:</label>
                             <input type="text" class="form-control" value="" id="modal_next_question">
@@ -147,8 +154,6 @@
                     id: id,
                 })
                 .then(function (response) {
-                    console.log(response);
-
                     document.getElementById('curRowIDX').value = x.parentNode.parentNode.rowIndex;
                     document.getElementById('modal_question_id').value = response['data']['id'];
                     document.getElementById('ori_question_number').value = response['data']['question_number'];
@@ -163,6 +168,7 @@
                     document.getElementById('modal_options_en').value = (response['data']['options_en'] == null)?"":response['data']['options_en'];
                     document.getElementById('modal_required').value = (response['data']['required'] == null)?"":response['data']['required'];
                     document.getElementById('modal_next_question').value = (response['data']['next_question'] == null)?"":response['data']['next_question'];
+                    setInputByQuestionType(x);
                 })
                 .catch(function (error) {
                     console.log(error);
@@ -198,15 +204,7 @@
             .then(function(response) {
                 var x = document.getElementsByTagName("tr")[document.getElementById('curRowIDX').value].id;
                 var row = document.getElementById(x);
-                var append_data =
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_number").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_type").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_options").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_next_question").value) +
-                    "<th><button type='button' class='btn btn-success' onclick='clickViewButton({0}, this)'>View</button></th>".format(response['data']['id']) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>" +
-                    "<th><button type='button' class='btn btn-danger' onclick='clickDeleteButton({0}, this)'>Delete</button></th>".format(response['data']['id']);
+                var append_data = formatRowHTMLbyModal(response['data']['id']);
                 row.innerHTML = append_data;
             })
             .catch(function (error) {
@@ -215,7 +213,6 @@
         }
 
         function clickInsertButton(x){
-            console.log("total ", document.getElementById("questionTable").rows.length);
             console.log("cur index ", x.parentNode.parentNode.rowIndex);
 
             document.getElementById('curRowIDX').value = x.parentNode.parentNode.rowIndex;
@@ -258,20 +255,55 @@
             })
             .then(function(response) {
                 var curRow = document.getElementsByTagName("tr")[document.getElementById('curRowIDX').value];
-                var append_data =
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_number").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_type").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_options").value) +
-                    "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_next_question").value) +
-                    "<th><button type='button' class='btn btn-success' onclick='clickViewButton({0}, this)'>View</button></th>".format(response['data']['id']) +
-                    "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>" +
-                    "<th><button type='button' class='btn btn-danger' onclick='clickDeleteButton({0}, this)'>Delete</button></th>".format(response['data']['id']);
+                var append_data = formatRowHTMLbyModal(response['data']['id']);
                 curRow.insertAdjacentHTML("afterend", append_data);
             })
             .catch(function (error) {
                 console.log(error);
             });
+        }
+
+        function clickDeleteButton(id, x){
+            axios.post( '{{route('questions.delete')}}', {
+                id:id
+            })
+                .then(function(response) {
+                    var curRow = document.getElementsByTagName("tr")[x.parentNode.parentNode.rowIndex];
+                    curRow.remove();
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        }
+
+        function formatRowHTMLbyModal(id){
+            var append_data =
+                "<th scope=\"col\">{0}</th>".format(id) +
+                "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_number").value) +
+                "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_type").value) +
+                "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +
+                "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_options").value) +
+                "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_next_question").value) +
+                "<th><button type='button' class='btn btn-success' onclick='clickViewButton({0}, this)'>View</button></th>".format(id) +
+                "<th><button type='button' class='btn btn-primary' onclick='clickInsertButton(this)'>Insert</button></th>" +
+                "<th><button type='button' class='btn btn-danger' onclick='clickDeleteButton({0}, this)'>Delete</button></th>".format(id);
+            return append_data;
+        }
+
+        function setInputByQuestionType(x){
+            if(document.getElementById("modal_question_type").value == "D" || document.getElementById("modal_question_type").value == "T"){
+                document.getElementById("modal_options").value = "";
+                document.getElementById("modal_options_en").value = "";
+                document.getElementById("modal_options_code").value = "";
+                document.getElementById("modal_options").setAttribute("disabled", "true");
+                document.getElementById("modal_options_en").setAttribute("disabled", "true");
+                document.getElementById("modal_options_code").setAttribute("disabled", "true");
+            }
+            else {
+                document.getElementById("modal_options").removeAttribute("disabled");
+                document.getElementById("modal_options_en").removeAttribute("disabled");
+                document.getElementById("modal_options_code").removeAttribute("disabled");
+            }
         }
 
         String.prototype.format = function () {
@@ -281,19 +313,6 @@
             }
             return a
         };
-
-        function clickDeleteButton(id, x){
-            axios.post( '{{route('questions.delete')}}', {
-                id:id
-            })
-            .then(function(response) {
-                var curRow = document.getElementsByTagName("tr")[x.parentNode.parentNode.rowIndex];
-                curRow.remove();
-            })
-            .catch(function (error) {
-                console.log(error);
-            });
-        }
     </script>
 
 @endsection
