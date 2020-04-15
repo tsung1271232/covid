@@ -15,9 +15,9 @@
                     <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Description</th>
-                        <th>Max_Number</th>
-                        <th>Question</th>
+                        <th>描述</th>
+                        <th>總題數</th>
+                        <th>題目</th>
                     </tr>
                     </thead>
                     <tbody>

@@ -72,12 +72,14 @@
         <li class="c-sidebar-nav-title">List <i class="cil-energy"></i>
         </li>
         <li class="c-sidebar-nav-item">
+            <span class="cil-energy"></span>
             <a class="c-sidebar-nav-link" href="{{ route('topics.index') }}">
-                Topic List
+                <i class="c-sidebar-nav-icon cil-layers"></i>Topic List
             </a>
         </li>
         <li class="c-sidebar-nav-item">
             <a class="c-sidebar-nav-link" href="{{ route('clientUsers.index') }}">
+                <i class="c-sidebar-nav-icon cil-user"></i>
                 Client User List
             </a>
         </li>

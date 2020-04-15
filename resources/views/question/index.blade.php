@@ -16,7 +16,7 @@
                     <table class="table" id="questionTable">
                         <thead>
                         <tr>
-                            <th>id</th>
+{{--                            <th>id</th>--}}
                             <th>question number</th>
                             <th>question type</th>
                             <th>question</th>
@@ -30,7 +30,7 @@
                         <tbody>
                         @foreach ($questions as $question)
                             <tr id = "row{{$loop->index}}" >
-                                <th scope="col" width="5%">{{$question->id}}</th>
+{{--                                <th scope="col" width="5%">{{$question->id}}</th>--}}
 
                                 <th scope="col" width="5%">{{$question->question_number}}</th>
 
@@ -56,7 +56,9 @@
                         </tbody>
 
                     </table>
-
+                    <td scope="col" width="5%">
+                        <button type="button" class="btn btn-primary" onclick="clickInsertButton(this)">Add</button>
+                    </td>
                 </div>
             </form>
         </div>
@@ -278,7 +280,7 @@
 
         function formatRowHTMLbyModal(id){
             var append_data =
-                "<th scope=\"col\">{0}</th>".format(id) +
+                // "<th scope=\"col\">{0}</th>".format(id) +
                 "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_number").value) +
                 "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question_type").value) +
                 "<th scope=\"col\">{0}</th>".format(document.getElementById("modal_question").value) +

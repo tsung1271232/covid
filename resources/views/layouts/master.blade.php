@@ -28,29 +28,15 @@
     </head>
 
     <body class="c-app">
-{{--        <div class="c-sidebar c-sidebar-dark c-sidebar-fixed c-sidebar-lg-show" id="sidebar">--}}
-
-{{--            @include('layouts.nav-builder')--}}
-
-{{--            @include('layouts.header')--}}
-
-{{--            <div class="c-body">--}}
-
-{{--                <main class="c-main">--}}
-
-{{--                    @yield('content')--}}
-
-{{--                </main>--}}
-{{--            </div>--}}
-{{--            @include('layouts.footer')--}}
-{{--        </div>--}}
         @include('layouts.sidebar')
         <div class="c-wrapper">
             @include('layouts.header')
 
             <div class="c-body">
                 <main class="c-main">
+
                     @yield('content')
+
                 </main>
             </div>
             @include('layouts.footer')
@@ -63,9 +49,6 @@
     <script src="{{ asset('js/coreui-utils.js') }}"></script>
     <script src="{{ asset('js/axios.min.js')}}"></script>
     @yield('javascript')
-
-
-
 
     </body>
 </html>
