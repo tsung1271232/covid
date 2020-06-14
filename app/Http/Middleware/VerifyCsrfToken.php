@@ -19,11 +19,14 @@ class VerifyCsrfToken extends Middleware
         "/covid/endQuestion",
 
         "/covid/patientProfile",
+        "/covid/confirmPatient",
         "/covid/selfManage",
 
         "/insertQuestion",
         "/getQuestionContent",
         "/updateQuestion",
         "/deleteQuestion",
+
+        "/queryExample"
     ];
 }
