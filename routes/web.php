@@ -30,6 +30,8 @@ Route::prefix('/covid')->group(function () {
 
     Route::Post('/patientProfile', 'CovidController@patientProfile')->name("getPatientBySSN");
 
+    Route::Post('/confirmPatient', 'CovidController@confirmPatient')->name("confirmPatient");
+
     Route::get("/excel", "QuestionController@import");
 
     Route::Post('/selfManage', 'CovidController@selfManage');
@@ -38,6 +40,8 @@ Route::prefix('/covid')->group(function () {
 
     /*for test*/
     Route::get("/test/{topicRecord}/{topic}", "CovidController@test");
+
+//    Route::get('/buttonExample', "HomeworkController@buttonExample")->name('homework.index');
 });
 
 Route::group(['middleware' => ['auth:web']], function () {
@@ -59,6 +63,10 @@ Route::group(['middleware' => ['auth:web']], function () {
     Route::Post('/getQuestionContent', "QuestionController@getContent")->name('questions.getContent');
 
     Route::Post('/deleteQuestion', "QuestionController@delete")->name('questions.delete');
+
+    Route::get('/homework', "HomeworkController@index")->name('homework.index');
+    Route::get('/buttonExample/{query_type}', "HomeworkController@buttonExample")->name('homework.buttonExample');
+    Route::Post('/queryExample', "HomeworkController@queryExample")->name('homework.queryExample');
 });
 
 
